@@ -9,5 +9,8 @@
 .category .btn-add:hover{opacity:0.9}
 
 @media (max-width:800px){
-  .category .grid{grid-template-columns:repeat(2,1fr)}
+  .category .grid{grid-template-columns:1fr}
+  .category{padding:1.6rem 0.8rem}
+  .category h1{font-size:1.6rem}
+  .category .product img{height:200px}
 }

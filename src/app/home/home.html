@@ -13,7 +13,7 @@
 
 <section class="products container">
   <h2>Produtos</h2>
-  <div class="carousel-wrap">
+  <div class="carousel-wrap" (mouseenter)="pauseAuto()" (mouseleave)="resumeAuto()" (touchstart)="pauseAuto()" (touchend)="resumeAuto()">
     <button class="arrow left" (click)="scroll('prod-list','left')">◀</button>
     <div id="prod-list" class="carousel">
       <div class="product" *ngFor="let p of products">

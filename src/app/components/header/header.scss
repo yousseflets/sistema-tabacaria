@@ -22,4 +22,16 @@
 .nav-item.dropdown .dropdown-menu a{display:block;padding:0.6rem 1rem;color:var(--text);text-decoration:none}
 .nav-item.dropdown .dropdown-menu a:hover{background:rgba(255,255,255,0.06)}
 .nav-item.dropdown.open .dropdown-menu,.nav-item.dropdown:hover .dropdown-menu{display:block;opacity:1;transform:translateY(0)}
+
+/* Mobile: make dropdown transform into a full-width panel below header */
+@media (max-width:767px){
+	.site-header .container{display:flex;align-items:center;justify-content:space-between;gap:8px}
+	.main-nav{display:flex;align-items:center;gap:8px}
+	.nav-item.dropdown{position:relative}
+	.nav-item.dropdown .drop-toggle{padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.02)}
+	.nav-item.dropdown .dropdown-menu{position:static;min-width:unset;left:auto;top:auto;background:rgba(0,0,0,0.95);backdrop-filter:none;border-radius:8px;padding:6px;box-shadow:none;transform:none;opacity:1;display:none}
+	.nav-item.dropdown.open .dropdown-menu{display:block}
+	.nav-item.dropdown .dropdown-menu a{padding:10px 12px}
+	.main-nav a.cart{padding:8px;border-radius:10px}
+}
 .nav-item.dropdown .dropdown-menu[aria-hidden="true"]{pointer-events:none}

@@ -1,0 +1,74 @@
+<section class="about-hero">
+  <div class="about-hero-inner container">
+    <h1>Sobre Nós</h1>
+    <p class="lead"  style="font-size: 1.5rem;">Bem-vindo à nossa tabacaria! Somos apaixonados por oferecer produtos selecionados e um atendimento humano. Cada detalhe é pensado para garantir qualidade e satisfação — desde a escolha até a entrega.</p>
+    <div class="kpis">
+      <div class="kpi"><strong>+500</strong><small> Clientes satisfeitos</small></div>
+      <div class="kpi"><strong>+250</strong><small> Entregas realizadas</small></div>
+      <div class="kpi"><strong>4.8</strong><small> Avaliação média</small></div>
+    </div>
+  </div>
+</section>
+
+<section class="about container modern">
+  <div class="grid">
+    <div class="cards">
+      <article class="card">
+        <div class="card-ico">🏆</div>
+        <h3>Missão</h3>
+        <p>Nossa missão é oferecer produtos de qualidade, atendimento confiável e um ambiente de compras seguro para nossos clientes.</p>
+      </article>
+
+      <article class="card">
+        <div class="card-ico">🔭</div>
+        <h3>Visão</h3>
+        <p>Ser referência regional em variedade e atendimento em tabacaria, com foco em confiança e conveniência.</p>
+      </article>
+
+      <article class="card">
+        <div class="card-ico">🤝</div>
+        <h3>Valores</h3>
+        <ul>
+          <li>Qualidade</li>
+          <li>Transparência</li>
+          <li>Rapidez na entrega</li>
+        </ul>
+      </article>
+    </div>
+
+    <aside class="contact card contact-panel">
+      <h3>Contato</h3>
+      <p class="muted"><strong>Telefone:</strong> <a href="tel:{{ phone }}">{{ phone }}</a></p>
+      <p class="muted"><strong>Endereço:</strong> {{ address }}</p>
+
+      <h4>Horário</h4>
+      <ul>
+        <li *ngFor="let h of hours">{{ h }}</li>
+      </ul>
+
+      <div class="contact-actions">
+        <a class="btn-primary" routerLink="/produtos">Ver produtos</a>
+      </div>
+
+      <div class="socials">
+        <a aria-label="Instagram" href="https://instagram.com/lojadeexemplo" target="_blank" rel="noopener">
+          <img src="/instagram.png" alt="Instagram" width="28" height="28" />
+        </a>
+        <a aria-label="WhatsApp" href="https://wa.me/5511997630847" target="_blank" rel="noopener">
+          <img src="/whatsapp.png" alt="WhatsApp" width="28" height="28" />
+        </a>
+      </div>
+    </aside>
+  </div>
+
+  <section class="team">
+    <h3>Equipe</h3>
+    <div class="team-grid">
+      <div class="member" *ngFor="let n of [1,2,3]">
+        <img src="https://i.pravatar.cc/100?img={{n + 10}}" alt="Membro {{n}}" />
+        <div class="name">Colaborador {{n}}</div>
+        <div class="role">Atendimento</div>
+      </div>
+    </div>
+  </section>
+</section>

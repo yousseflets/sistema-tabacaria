@@ -4,14 +4,52 @@
 /* Global theme variables and base styles (moved from app.scss so they apply globally) */
 :root{--bg:#000000;--container:1100px;--text:#ffffff;--muted:rgba(255,255,255,0.7)}
 *{box-sizing:border-box}
-html, body {height:100%; background: var(--bg); color: var(--text); margin:0}
+html, body {height:100%; background: var(--bg); color: var(--text); margin:0; overflow-y:auto}
 
-.app-main{min-height:100vh;background:var(--bg);color:var(--text)}
-.container{max-width:var(--container);margin:0 auto;padding:0 1rem;background:transparent}
+/* Mobile-first globals: keep layout fluid and touch-friendly */
+.app-main{min-height:100vh;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+.container{width:100%;max-width:100%;margin:0 auto;padding:0 1rem;background:transparent}
 
-a{color:var(--text)}
+a{color:var(--text);text-decoration:none}
 
 /* Use Teko as the default site font; keep Almendra SC for headings */
-body{font-family:'Teko', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif}
+body{font-family:'Teko', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;font-size:18px;line-height:1.4}
+
+/* Touch targets and form controls comfortable for mobile */
+button,input,textarea,select{font-family:inherit;font-size:1rem}
+button, .btn{min-height:44px;padding:10px 14px;border-radius:10px}
+input[type=text],input[type=number],input[type=tel],textarea{padding:12px;border-radius:10px}
+
+/* Hide native scrollbars on touch devices (still allow scrolling) */
+::-webkit-scrollbar{height:0; width:0}
+
+/* Modals / dialogs: full-screen experience on small devices */
+.checkout-modal .dialog,.confirm-modal .confirm-dialog{width:100%;height:100%;max-width:100%;border-radius:0;padding:18px;box-sizing:border-box}
+.checkout-modal{align-items:stretch}
+.checkout-modal .checkout-body{flex-direction:column;gap:12px}
+.checkout-modal .left,.checkout-modal .right{flex:unset}
+
+/* Confirm modal actions stacked on mobile */
+.confirm-modal .confirm-actions{flex-direction:column;align-items:stretch}
+
+/* Product cards / lists default to single-column blocks on mobile */
+.card,.product-card,.category-card{width:100%;display:block}
+
+/* Make header and top navigation compact for mobile */
+.app-header{padding:10px 12px}
+.logo img{height:36px}
+
+/* Make carousel show one item by default (component-level rules may override) */
+.carousel{overflow:hidden}
+
+/* Provide a breakpoint for larger screens where we restore desktop container width */
+@media (min-width:768px){
+	:root{--container:1100px}
+	.container{max-width:var(--container)}
+	body{font-size:16px}
+	.checkout-modal .dialog,.confirm-modal .confirm-dialog{width:min(900px,95%);height:auto;border-radius:10px}
+	.checkout-modal .checkout-body{flex-direction:row}
+	.confirm-modal .confirm-actions{flex-direction:row;justify-content:flex-end}
+}
 
 /* You can add other global styles or imports below */

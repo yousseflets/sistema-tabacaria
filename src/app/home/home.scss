@@ -12,6 +12,13 @@
 
 .carousel-wrap{position:relative;display:flex;align-items:center}
 .carousel{display:flex;gap:1rem;overflow-x:auto;padding:1rem 0;scroll-behavior:smooth}
+/* hide native horizontal scrollbar but keep scrolling functional */
+.carousel{
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.carousel::-webkit-scrollbar{display:none;height:0}
+.carousel{-webkit-overflow-scrolling:touch;touch-action:pan-y}
 .product{min-width:220px;background:#000;border-radius:8px;padding:0.5rem;box-shadow:none;color:var(--text);border:1px solid rgba(255,255,255,0.03)}
 .product img{width:100%;height:140px;object-fit:cover;border-radius:6px}
 .meta{padding:0.5rem}
@@ -25,6 +32,11 @@
 .testimonials .test{background:#ffffff;padding:1rem;border-radius:8px;flex:1;color:var(--bg);border:1px solid rgba(255,255,255,0.03)}
 
 @media (max-width:800px){
-  .categories .grid{grid-template-columns:repeat(2,1fr)}
-  .hero h1{font-size:2rem}
+  .categories .grid{grid-template-columns:1fr}
+  .hero{height:40vh}
+  .hero h1{font-size:1.6rem}
+  .product{min-width:100%;padding:0.6rem}
+  .product img{height:220px}
+  /* Stack testimonials vertically on mobile so content flows and vertical scroll works */
+  .testimonials .tests{flex-direction:column}
 }
