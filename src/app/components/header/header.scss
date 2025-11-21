@@ -1,0 +1,25 @@
+.site-header{background:transparent;border-bottom:1px solid rgba(255,255,255,0.06)}
+.site-header .container{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:1rem}
+.logo{display:flex;align-items:center}
+.logo-image{height:40px;width:auto;display:block}
+
+.main-nav a{margin-left:1rem;text-decoration:none;color:var(--text);display:inline-flex;align-items:center}
+.main-nav a.cart{color:var(--text);padding:0.4rem 0.7rem;border-radius:8px;gap:0.4rem;box-shadow:0 2px 8px rgba(0,0,0,0.35)}
+.main-nav a.cart:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,0.5)}
+.main-nav a.cart svg{display:inline-block; vertical-align:middle; fill:currentColor}
+.main-nav a.cart .cart-icon{display:inline-block;fill:currentColor;width:22px;height:22px}
+.main-nav a.cart .cart-badge{position:relative;top:-10px;left:-12px;background:#e53935;color:#fff;font-size:11px;padding:2px 6px;border-radius:999px;border:2px solid rgba(0,0,0,0.25);line-height:1}
+
+/* make header links fully white on hover */
+.main-nav a:hover{color:#fff}
+
+/* Dropdown styles for Produtos */
+.nav-item.dropdown{position:relative;display:inline-block;margin-left:1rem}
+.nav-item.dropdown .drop-toggle{color:var(--text);text-decoration:none;padding:0.25rem 0.5rem;background:transparent;border:0;cursor:pointer;font:inherit}
+.nav-item.dropdown .drop-toggle::after{content:' ▾';font-size:0.85rem;margin-left:0.25rem}
+.nav-item.dropdown .dropdown-menu{position:absolute;top:100%;left:0;min-width:220px;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);border-radius:8px;padding:0.25rem 0;box-shadow:0 8px 30px rgba(0,0,0,0.7);display:none;z-index:40;transition:opacity 150ms ease, transform 150ms ease;opacity:0;transform:translateY(-6px)}
+.nav-item.dropdown .dropdown-menu li{list-style:none}
+.nav-item.dropdown .dropdown-menu a{display:block;padding:0.6rem 1rem;color:var(--text);text-decoration:none}
+.nav-item.dropdown .dropdown-menu a:hover{background:rgba(255,255,255,0.06)}
+.nav-item.dropdown.open .dropdown-menu,.nav-item.dropdown:hover .dropdown-menu{display:block;opacity:1;transform:translateY(0)}
+.nav-item.dropdown .dropdown-menu[aria-hidden="true"]{pointer-events:none}

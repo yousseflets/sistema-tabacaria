@@ -1,0 +1,30 @@
+.hero{height:70vh;background-image:linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),url('/hero-inner.jpg');background-size:cover;background-position:center;display:flex;align-items:center;background-color:#000}
+.hero-inner{max-width:1100px;margin:0 auto;color:var(--text);padding:2rem;}
+.hero h1{font-size:4.9rem;margin-bottom:0.5rem;color:var(--text);text-transform:uppercase;font-family:'Almendra SC', serif}
+.hero p{opacity:0.95;margin-bottom:1rem;color:var(--muted)}
+.hero-actions .btn{margin-right:1rem;padding:0.8rem 1.2rem;border-radius:6px;border:none}
+.btn-gold{background:#b8860b;color:#fff}
+.btn-outline{background:transparent;color:var(--text);border:1px solid rgba(255,255,255,0.08)}
+
+.container{max-width:1100px;margin:3rem auto;padding:0 1rem}
+.categories .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.categories .card{background:#ffffff;padding:1.5rem;border-radius:8px;box-shadow:none;text-align:center;color:var(--bg);border:1px solid rgba(255,255,255,0.03)}
+
+.carousel-wrap{position:relative;display:flex;align-items:center}
+.carousel{display:flex;gap:1rem;overflow-x:auto;padding:1rem 0;scroll-behavior:smooth}
+.product{min-width:220px;background:#000;border-radius:8px;padding:0.5rem;box-shadow:none;color:var(--text);border:1px solid rgba(255,255,255,0.03)}
+.product img{width:100%;height:140px;object-fit:cover;border-radius:6px}
+.meta{padding:0.5rem}
+.arrow{background:rgba(255,255,255,0.04);border:none;color:var(--text);padding:0.5rem 0.7rem;border-radius:6px;cursor:pointer}
+
+.banner{height:70vh;background-image:linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),url('/banner-premium.jpg');background-size:cover;background-position:center;display:flex;align-items:center;background-color:#000}
+.banner-inner{max-width:1100px;margin:0 auto;color:var(--text);padding:2rem}
+.banner h2{font-size:2.5rem;margin:0;color:var(--text);font-family:'Almendra SC', serif;text-transform:uppercase}
+
+.testimonials .tests{display:flex;gap:1rem}
+.testimonials .test{background:#ffffff;padding:1rem;border-radius:8px;flex:1;color:var(--bg);border:1px solid rgba(255,255,255,0.03)}
+
+@media (max-width:800px){
+  .categories .grid{grid-template-columns:repeat(2,1fr)}
+  .hero h1{font-size:2rem}
+}

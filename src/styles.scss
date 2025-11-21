@@ -1,1 +1,17 @@
-/* You can add global styles to this file, and also import other style files */
+/* Import Google Fonts: Almendra SC for headings, Teko for the site */
+@import url('https://fonts.googleapis.com/css2?family=Almendra+SC&family=Teko:wght@300;400;500;600;700&display=swap');
+
+/* Global theme variables and base styles (moved from app.scss so they apply globally) */
+:root{--bg:#000000;--container:1100px;--text:#ffffff;--muted:rgba(255,255,255,0.7)}
+*{box-sizing:border-box}
+html, body {height:100%; background: var(--bg); color: var(--text); margin:0}
+
+.app-main{min-height:100vh;background:var(--bg);color:var(--text)}
+.container{max-width:var(--container);margin:0 auto;padding:0 1rem;background:transparent}
+
+a{color:var(--text)}
+
+/* Use Teko as the default site font; keep Almendra SC for headings */
+body{font-family:'Teko', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif}
+
+/* You can add other global styles or imports below */

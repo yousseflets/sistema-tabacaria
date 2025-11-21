@@ -1,0 +1,115 @@
+<section class="cart container">
+  <h1>Seu Carrinho</h1>
+
+  <div *ngIf="items.length === 0" class="empty">Seu carrinho está vazio.</div>
+
+  <div class="items" *ngIf="items.length > 0">
+    <div class="item" *ngFor="let it of items">
+      <img [src]="it.image" alt="{{ it.name }}" />
+      <div class="info">
+        <div class="name">{{ it.name }}</div>
+        <div class="price">R$ {{ it.price }}</div>
+        <div class="qty-controls">
+          <button (click)="decrease(it)">-</button>
+          <span>{{ it.qty || 1 }}</span>
+          <button (click)="increase(it)">+</button>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn-remove" (click)="remove(it)" aria-label="Remover item">
+          <!-- Trash icon (inline SVG similar to MUI DeleteIcon) -->
+          <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="summary">
+      <div>Total: R$ {{ total() }}</div>
+      <div class="buttons">
+        <button class="btn-clear" (click)="clear()">Limpar carrinho</button>
+        <button class="btn-checkout" (click)="openCheckout()">Finalizar compra</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Checkout modal -->
+<div class="checkout-modal" *ngIf="showCheckout">
+  <div class="overlay" (click)="closeCheckout()"></div>
+  <div class="dialog">
+    <h2>Finalizar Pedido</h2>
+    <div class="checkout-body">
+      <div class="left">
+        <h3>Itens</h3>
+        <ul>
+          <li *ngFor="let it of items">{{ it.name }} x{{ it.qty || 1 }} — R$ {{ itemTotal(it) }}</li>
+        </ul>
+      </div>
+      <div class="right">
+        <div class="origin"><strong>Saída:</strong> Rua Jayr de Lima Ferreira, 100 - Jardim Cintia, Mogi das Cruzes - SP, 08830-265</div>
+        <div style="height:8px"></div>
+
+        <label>CEP</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" [(ngModel)]="cep" placeholder="00000-000" (input)="onCepInput()" />
+        </div>
+
+        <label>Rua</label>
+        <input type="text" [(ngModel)]="street" placeholder="Logradouro" (input)="onAddressChange()" />
+
+        <div style="display:flex;gap:8px">
+          <div style="flex:1">
+            <label>Número</label>
+            <input type="text" [(ngModel)]="number" placeholder="Número" (input)="onAddressChange()" />
+          </div>
+          <div style="flex:2">
+            <label>Complemento</label>
+            <input type="text" [(ngModel)]="complement" placeholder="Apto / Bloco" (input)="onAddressChange()" />
+          </div>
+        </div>
+
+        <label>Bairro</label>
+        <input type="text" [(ngModel)]="neighborhood" placeholder="Bairro" (input)="onAddressChange()" />
+
+        <div style="display:flex;gap:8px">
+          <div style="flex:2">
+            <label>Cidade</label>
+            <input type="text" [(ngModel)]="city" placeholder="Cidade" (input)="onAddressChange()" />
+          </div>
+          <div style="flex:1">
+            <label>UF</label>
+            <input type="text" [(ngModel)]="state" placeholder="SP" (input)="onAddressChange()" />
+          </div>
+        </div>
+
+        <label>Forma de pagamento</label>
+        <div class="payments">
+          <label><input type="radio" name="pay" value="dinheiro" [(ngModel)]="payment" /> Dinheiro</label>
+          <label><input type="radio" name="pay" value="pix" [(ngModel)]="payment" /> Pix</label>
+          <label><input type="radio" name="pay" value="credito" [(ngModel)]="payment" /> Cartão Crédito</label>
+          <label><input type="radio" name="pay" value="debito" [(ngModel)]="payment" /> Cartão Débito</label>
+        </div>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn-continue" (click)="closeCheckout()">Continuar comprando</button>
+      <button class="btn-finalize" (click)="openConfirm()">Finalizar e enviar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm modal before opening WhatsApp (security message) -->
+<div class="confirm-modal" *ngIf="showConfirm">
+  <div class="overlay" (click)="cancelConfirm()"></div>
+  <div class="confirm-dialog">
+    <h3>Confirmação</h3>
+    <p class="confirm-message">Para sua segurança não edite seu pedido via WhatsApp, site monitorado com relatórios de compras!!</p>
+       <p style="margin-top:10px"><strong>Endereço de entrega:</strong> {{ address || '-' }}</p>
+    <div class="confirm-actions">
+      <button class="btn-cancel" (click)="cancelConfirm()">Cancelar</button>
+      <button class="btn-confirm" (click)="confirmFinalize()">Enviar Pedido</button>
+    </div>
+  </div>
+</div>

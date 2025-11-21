@@ -1,0 +1,52 @@
+.cart{padding:2rem 1rem;color:var(--text)}
+.cart .empty{padding:2rem;background:rgba(255,255,255,0.02);border-radius:8px}
+.cart .items{display:flex;flex-direction:column;gap:1rem}
+.cart .item{display:flex;gap:1rem;align-items:center;padding:0.6rem;background:rgba(255,255,255,0.02);border-radius:8px}
+.cart .item img{width:140px;height:90px;object-fit:cover;border-radius:6px}
+.cart .info{flex:1}
+.cart .qty-controls{display:flex;align-items:center;gap:0.6rem;margin-top:0.6rem}
+.cart .qty-controls button{padding:0.2rem 0.6rem}
+.cart .actions .btn-remove{background:#e53935;border:0;padding:0.25rem;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;color:#fff;cursor:pointer;transition:background 120ms ease, transform 120ms ease;box-shadow:0 6px 14px rgba(229,57,53,0.18)}
+.cart .actions .btn-remove svg{width:20px;height:20px;fill:currentColor}
+.cart .actions .btn-remove:hover{background:#d32f2f;transform:translateY(-2px);box-shadow:0 10px 20px rgba(211,47,47,0.22)}
+.cart .actions .btn-remove:focus{outline:2px solid rgba(255,255,255,0.08);outline-offset:2px}
+.cart .summary{margin-top:1rem;display:flex;justify-content:space-between;align-items:center}
+.cart .buttons button{margin-left:0.5rem;padding:0.6rem 0.9rem}
+
+@media (max-width:800px){
+  .cart .item{flex-direction:column;align-items:flex-start}
+  .cart .item img{width:100%;height:200px}
+}
+
+/* Checkout modal */
+.checkout-modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center}
+.checkout-modal .overlay{position:absolute;inset:0;background:rgba(0,0,0,0.6)}
+.checkout-modal .dialog{position:relative;background:#0b0b0b;border-radius:10px;padding:18px;width:min(900px,95%);max-height:150vh;overflow:auto;border:1px solid rgba(255,255,255,0.04)}
+.checkout-modal h2{margin:0 0 12px 0;font-family:'Almendra SC', serif}
+.checkout-modal .checkout-body{display:flex;gap:18px}
+.confirm-modal{position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center}
+.confirm-modal .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:2990}
+.confirm-modal .confirm-dialog{position:relative;background:#0b0b0b;border-radius:10px;padding:20px;width:480px;max-width:92%;box-shadow:0 10px 40px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.04);text-align:left;z-index:3001}
+.confirm-modal h3{margin:0 0 8px 0}
+.confirm-modal p{color:rgba(255,255,255,0.95);font-size:0.95rem}
+.confirm-modal .confirm-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}
+.btn-cancel{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--text);padding:0.5rem 0.9rem;border-radius:8px}
+.btn-confirm{background:#0bda8b;color:#000;padding:0.6rem 0.9rem;border-radius:8px;border:0}
+
+/* Highlighted security message */
+.confirm-modal .confirm-message{background:#FFEB3B;color:#B71C1C;padding:12px;border-radius:8px;font-weight:600;margin:8px 0}
+.confirm-modal .confirm-message a{color:#B71C1C;text-decoration:underline}
+.checkout-modal .left{flex:1}
+.checkout-modal .right{flex:1}
+.checkout-modal textarea{width:100%;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);color:var(--text);padding:12px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.6);transition:box-shadow 140ms ease,border-color 140ms ease}
+.checkout-modal input[type=text],.checkout-modal input[type=number],.checkout-modal input[type=tel]{width:100%;padding:12px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);color:var(--text);transition:box-shadow 140ms ease,border-color 140ms ease}
+.checkout-modal input[type=text]:focus,.checkout-modal input[type=number]:focus,.checkout-modal input[type=tel]:focus,.checkout-modal textarea:focus{outline:none;border-color:#0bda8b;box-shadow:0 6px 20px rgba(11,218,139,0.06)}
+.checkout-modal label{display:block;font-size:0.78rem;color:rgba(255,255,255,0.7);margin-bottom:6px;margin-top:10px}
+.checkout-modal .payments label{display:inline-flex;align-items:center;gap:8px;margin-right:12px;margin-top:6px}
+.checkout-modal .right{display:flex;flex-direction:column;gap:6px}
+.checkout-modal .form-row{display:flex;gap:8px;align-items:center}
+.checkout-modal .fee{font-weight:600;margin-top:6px}
+.checkout-modal .dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:12px}
+.btn-finalize{background:#0bda8b;color:#000;padding:0.6rem 0.9rem;border-radius:6px;border:0}
+.btn-continue{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--text);padding:0.5rem 0.8rem;border-radius:6px}
+

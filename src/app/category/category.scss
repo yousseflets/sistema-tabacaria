@@ -1,0 +1,13 @@
+.category{padding:3rem 1rem;color:var(--text)}
+.category h1{font-family:'Almendra SC', serif;font-size:2.5rem;margin-bottom:1rem}
+.category .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.category .product{background:transparent;border-radius:8px;padding:0.5rem;border:1px solid rgba(255,255,255,0.03)}
+.category .product img{width:100%;height:160px;object-fit:cover;border-radius:6px}
+.category .meta{padding:0.5rem;color:var(--muted)}
+
+.category .btn-add{display:inline-block;margin-top:0.6rem;padding:0.45rem 0.8rem;background:var(--text);color:var(--bg);border-radius:6px;border:0;cursor:pointer;font-weight:600}
+.category .btn-add:hover{opacity:0.9}
+
+@media (max-width:800px){
+  .category .grid{grid-template-columns:repeat(2,1fr)}
+}
