@@ -7,22 +7,26 @@
 <section class="categories container">
   <h2>Categorias</h2>
   <div class="grid">
-    <a class="card" *ngFor="let c of categories" [routerLink]="['/produtos', c.slug]">{{ c.name }}</a>
+    <a class="card" *ngFor="let c of categories$ | async" [routerLink]="['/produtos', c.slug]">{{ c.name }}</a>
   </div>
 </section>
-
 <section class="products container">
   <h2>Produtos</h2>
   <div class="carousel-wrap" (mouseenter)="pauseAuto()" (mouseleave)="resumeAuto()" (touchstart)="pauseAuto()" (touchend)="resumeAuto()">
     <button class="arrow left" (click)="scroll('prod-list','left')">◀</button>
     <div id="prod-list" class="carousel">
-      <div class="product" *ngFor="let p of products">
-        <img [src]="p.image" alt="{{p.name}}" />
-        <div class="meta">
-          <div class="name">{{ p.name }}</div>
-          <div class="price">R$ {{ p.price }}</div>
+        <div class="product" *ngFor="let p of products$ | async">
+          <div class="meta">
+            <div class="name">{{ p.name }}</div>
+            <div class="meta-row">
+              <small class="brand">{{ p.brand?.name }}</small>
+            </div>
+            <div class="price">R$ {{ (p.price | number:'1.2-2') }}</div>
+            <div class="actions">
+              <a class="btn-link" [routerLink]="['/produtos', p.category?.slug || (p.category?.name | lowercase)]">Ver produtos</a>
+            </div>
+          </div>
         </div>
-      </div>
     </div>
     <button class="arrow right" (click)="scroll('prod-list','right')">▶</button>
   </div>

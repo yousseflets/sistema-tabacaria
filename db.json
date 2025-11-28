@@ -1,0 +1,28 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "GREEN GRAPE",
+      "price": 10,
+      "quantity": 50,
+      "active": 1,
+      "category": { "id": 2, "name": "Essências" },
+      "brand": { "id": 1, "name": "Magic" },
+      "image": "/assets/prod-1.jpg"
+    },
+    {
+      "id": 2,
+      "name": "BLUEBERRY",
+      "price": 12,
+      "quantity": 20,
+      "active": 1,
+      "category": { "id": 2, "name": "Essências" },
+      "brand": { "id": 1, "name": "Magic" },
+      "image": "/assets/prod-2.jpg"
+    }
+  ],
+  "categories": [
+    { "id": 1, "name": "Charutos", "slug": "charutos" },
+    { "id": 2, "name": "Essências", "slug": "essencias" }
+  ]
+}

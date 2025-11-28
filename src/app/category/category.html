@@ -1,10 +1,12 @@
 <section class="category container">
   <h1>{{ name }}</h1>
+  <div *ngIf="loading" class="loading">Carregando produtos...</div>
 
-  <div class="products">
+  <div class="products" *ngIf="!loading">
     <div class="grid">
       <div class="product" *ngFor="let p of products">
-        <img [src]="p.image" alt="{{ p.name }}" />
+        <img [src]="imageUrl(p.raw?.image || p.image)" alt="{{ p.name }}" (error)="handleImgError($event)" />
+        <div class="img-debug"><a [href]="imageUrl(p.raw?.image || p.image)" target="_blank">{{ imageUrl(p.raw?.image || p.image) }}</a></div>
         <div class="meta">
           <div class="name">{{ p.name }}</div>
           <div class="price">R$ {{ p.price }}</div>

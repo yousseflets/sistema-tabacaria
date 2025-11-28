@@ -2,6 +2,13 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CATEGORIES } from '../data/categories';
+import { Category as CategoryModel } from '../models/category';
+import { map } from 'rxjs/operators';
+import { ApiService } from '../services/api.service';
+import { API_BASE_URL } from '../app.config';
+import { Product } from '../models/product';
+import { Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-home',
@@ -11,15 +18,13 @@ import { CATEGORIES } from '../data/categories';
   styleUrls: ['./home.scss']
 })
 export class Home implements OnInit, OnDestroy {
-  // expose full category objects so cards can link to the category page
   categories = CATEGORIES;
+  categories$!: Observable<CategoryModel[]>;
 
-  // show 2 random products per category in the homepage carousel
-  products = (() => {
+  private fallbackProducts = (() => {
     const list: any[] = [];
     this.categories.forEach((c, ci) => {
       for (let j = 0; j < 2; j++) {
-        const idx = ci * 2 + j + 1;
         const price = (29.9 + ((ci * 2 + j) % 6) * 5).toFixed(2);
         const seed = `${c.slug}-${Math.floor(Math.random() * 10000)}`;
         list.push({
@@ -31,13 +36,14 @@ export class Home implements OnInit, OnDestroy {
         });
       }
     });
-    // shuffle list so items appear in mixed order
     for (let i = list.length - 1; i > 0; i--) {
       const r = Math.floor(Math.random() * (i + 1));
       [list[i], list[r]] = [list[r], list[i]];
     }
-    return list;
+    return list as Product[];
   })();
+
+  products$!: Observable<Product[]>;
 
   testimonials = [
     { name: 'João', text: 'Melhor atendimento e produtos de qualidade.' },
@@ -55,7 +61,39 @@ export class Home implements OnInit, OnDestroy {
   private autoTimer: any = null;
   private autoPaused = false;
 
+  constructor(private api: ApiService) {}
+
+  imageUrl(image?: string) {
+    const origin = (API_BASE_URL || '').replace(/\/api\/?$/, '');
+    if (!image) return '/assets/placeholder.png';
+    if (image.startsWith('http') || image.startsWith('//')) return image;
+    if (image.startsWith('storage/')) return origin + '/' + image;
+    if (image.startsWith('/storage/')) return origin + image;
+    if (image.startsWith('images/')) return origin + '/storage/' + image;
+    if (image.startsWith('/images/')) return origin + '/storage' + image;
+
+    // default: assume relative to origin
+    if (image.startsWith('/')) return origin + image;
+    return origin + '/' + image;
+  }
+
+  handleImgError(ev: Event) {
+    const img = ev.target as HTMLImageElement;
+    if (img && img.src && !img.getAttribute('data-fallback')) {
+      img.setAttribute('data-fallback', '1');
+      img.src = '/assets/placeholder.png';
+    }
+  }
+
   ngOnInit(): void {
+    // load categories from API (fallback to local CATEGORIES on error)
+    this.categories$ = this.api.getCategories().pipe(
+      catchError(() => of(CATEGORIES as CategoryModel[]))
+    );
+    this.products$ = this.api.getProducts().pipe(
+      catchError(() => of(this.fallbackProducts))
+    );
+
     this.startAuto();
   }
 
@@ -70,7 +108,6 @@ export class Home implements OnInit, OnDestroy {
       if (this.autoPaused) return;
       const el = document.getElementById('prod-list');
       if (!el) return;
-      // if at end, go back to start
       if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 10) {
         el.scrollTo({ left: 0, behavior: 'smooth' });
       } else {

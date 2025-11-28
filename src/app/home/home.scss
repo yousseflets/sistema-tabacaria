@@ -19,9 +19,16 @@
 }
 .carousel::-webkit-scrollbar{display:none;height:0}
 .carousel{-webkit-overflow-scrolling:touch;touch-action:pan-y}
-.product{min-width:220px;background:#000;border-radius:8px;padding:0.5rem;box-shadow:none;color:var(--text);border:1px solid rgba(255,255,255,0.03)}
-.product img{width:100%;height:140px;object-fit:cover;border-radius:6px}
-.meta{padding:0.5rem}
+.product{min-width:220px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:1rem;box-shadow:0 6px 18px rgba(0,0,0,0.35);color:var(--text);border:1px solid rgba(255,255,255,0.03);display:flex;flex-direction:column;justify-content:space-between;min-width:220px}
+.card-top{height:100px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:linear-gradient(135deg, rgba(184,134,11,0.15), rgba(255,255,255,0.02));margin-bottom:0.6rem}
+.product-art{font-size:2.4rem;font-weight:700;color:#fff;background:rgba(0,0,0,0.25);padding:0.4rem 0.6rem;border-radius:6px}
+.meta{padding:0.2rem}
+.name{font-size:1.05rem;font-weight:700;text-transform:uppercase;margin-bottom:0.35rem}
+.meta-row .brand{color:var(--muted);display:block;margin-bottom:0.6rem}
+.price{font-size:1.05rem;color:#ffd166;font-weight:800;margin-bottom:0.6rem}
+.actions{display:flex;gap:0.5rem}
+.btn-link{background:transparent;color:#ffffff;}
+.product:hover{transform:translateY(-6px);transition:transform 220ms ease}
 .arrow{background:rgba(255,255,255,0.04);border:none;color:var(--text);padding:0.5rem 0.7rem;border-radius:6px;cursor:pointer}
 
 .banner{height:70vh;background-image:linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),url('/banner-premium.jpg');background-size:cover;background-position:center;display:flex;align-items:center;background-color:#000}
@@ -36,7 +43,8 @@
   .hero{height:40vh}
   .hero h1{font-size:1.6rem}
   .product{min-width:100%;padding:0.6rem}
-  .product img{height:220px}
+  .card-top{height:140px}
+  .product-art{font-size:2.8rem}
   /* Stack testimonials vertically on mobile so content flows and vertical scroll works */
   .testimonials .tests{flex-direction:column}
 }
