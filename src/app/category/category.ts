@@ -22,6 +22,15 @@ export class Category {
   name = '';
   loading = false;
   products = [] as Array<{ id: string; name: string; price: string; image: string; raw?: Product }>;
+  // Client-side pagination to avoid rendering all items at once
+  pageSize = 20;
+  currentPage = 1;
+  // Server-side pagination state
+  useServerPaging = true;
+  serverPage = 1;
+  hasMore = true;
+  serverLastPage: number | null = null;
+  currentCategoryId: number | string | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -43,26 +52,67 @@ export class Category {
       const found = list.find(c => (c.slug || '').toLowerCase() === s.toLowerCase());
       this.name = found ? found.name : s.replace(/-/g, ' ');
       if (found && found.id) {
-        this.loading = true;
-        // Try query param route first to avoid 404s from missing nested resource routes.
-        // Fallback to /categories/:id/products if query route fails or returns empty.
-        this.api.getProductsByCategory(found.id).pipe(
-          catchError(() => this.api.getProductsByCategoryId(found.id)),
-          finalize(() => { this.loading = false; })
-        ).subscribe(list => {
-          this.products = (list || []).map(p => ({
-            id: String(p.id),
-            name: p.name,
-            price: (Number(p.price) || 0).toFixed(2),
-            image: p.image || `https://picsum.photos/seed/${this.slug}${p.id}/400/300`,
-            raw: p
-          }));
-        });
+        this.currentCategoryId = found.id;
+        // Try server-side pagination first; fallback to previous endpoints if unavailable.
+        this.serverPage = 1;
+        this.hasMore = true;
+        this.loadProductsPage(found.id, 1);
       } else {
         // fallback: try to load and filter by category name from products
         this.loadProductsForCategoryName(this.name);
       }
     });
+  }
+
+  private loadProductsPage(categoryId: number | string, page = 1) {
+    this.loading = true;
+    this.api.getProductsByCategoryPaged(categoryId, page, this.pageSize).pipe(
+      catchError(() => {
+        // If paged route not available, fallback to existing category endpoints
+        this.loadProductsByCategoryId(categoryId);
+        return of({ items: [] as Product[], meta: undefined });
+      }),
+      finalize(() => { this.loading = false; })
+    ).subscribe(result => {
+      const list = (result && (result as any).items) ? (result as any).items as Product[] : [] as Product[];
+      const meta = (result && (result as any).meta) ? (result as any).meta : undefined;
+
+      const mapped = (list || []).map(p => ({
+        id: String(p.id),
+        name: p.name,
+        price: (Number(p.price) || 0).toFixed(2),
+        image: p.image || `https://picsum.photos/seed/${this.slug}${p.id}/400/300`,
+        raw: p
+      }));
+
+      if (page === 1) this.products = mapped;
+      else this.products = this.products.concat(mapped);
+
+      // Determine hasMore using meta if provided, otherwise fall back to pageSize heuristic
+      if (meta && typeof meta.current_page !== 'undefined' && typeof meta.last_page !== 'undefined') {
+        this.serverPage = meta.current_page || page;
+        this.serverLastPage = meta.last_page || null;
+        this.hasMore = (meta.current_page || page) < (meta.last_page || (meta.current_page || page));
+      } else {
+        this.serverPage = page;
+        this.serverLastPage = null;
+        this.hasMore = mapped.length === this.pageSize;
+      }
+    });
+  }
+
+  // Navigate to a specific page (works for server or client paging)
+  goToPage(page: number) {
+    if (page < 1) return;
+    if (this.useServerPaging && this.currentCategoryId) {
+      // reset and load requested server page
+      this.products = [];
+      this.loadProductsPage(this.currentCategoryId, page);
+      return;
+    }
+
+    // client-side: set current page (will expand visibleProducts)
+    this.currentPage = page;
   }
 
   private loadProductsByCategoryId(categoryId: number | string) {
@@ -120,7 +170,24 @@ export class Category {
         image: p.image || `https://picsum.photos/seed/${this.slug}${p.id}/400/300`,
         raw: p
       }));
+      this.currentPage = 1;
     });
+  }
+
+  // visible subset of products for the current page
+  get visibleProducts() {
+    if (this.useServerPaging) return this.products;
+    const end = this.currentPage * this.pageSize;
+    return this.products.slice(0, end);
+  }
+
+  loadMore() {
+    if (this.useServerPaging && this.currentCategoryId && this.hasMore) {
+      this.loadProductsPage(this.currentCategoryId, this.serverPage + 1);
+      return;
+    }
+
+    this.currentPage += 1;
   }
 
   imageUrl(image?: string) {

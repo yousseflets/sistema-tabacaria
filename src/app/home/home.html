@@ -12,10 +12,11 @@
 </section>
 <section class="products container">
   <h2>Produtos</h2>
-  <div class="carousel-wrap" (mouseenter)="pauseAuto()" (mouseleave)="resumeAuto()" (touchstart)="pauseAuto()" (touchend)="resumeAuto()">
-    <button class="arrow left" (click)="scroll('prod-list','left')">◀</button>
-    <div id="prod-list" class="carousel">
-        <div class="product" *ngFor="let p of products$ | async">
+  <div class="groups">
+    <div class="group" *ngFor="let g of grouped$ | async">
+      <h3 class="group-title">{{ g.category.name }}</h3>
+      <div class="grid">
+        <div class="product" *ngFor="let p of g.products">
           <div class="meta">
             <div class="name">{{ p.name }}</div>
             <div class="meta-row">
@@ -23,12 +24,12 @@
             </div>
             <div class="price">R$ {{ (p.price | number:'1.2-2') }}</div>
             <div class="actions">
-              <a class="btn-link" [routerLink]="['/produtos', p.category?.slug || (p.category?.name | lowercase)]">Ver produtos</a>
+              <a class="btn-link" [routerLink]="['/produtos', g.category.slug]">Ver produtos</a>
             </div>
           </div>
         </div>
+      </div>
     </div>
-    <button class="arrow right" (click)="scroll('prod-list','right')">▶</button>
   </div>
 </section>
 

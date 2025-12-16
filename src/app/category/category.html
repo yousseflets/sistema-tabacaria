@@ -4,15 +4,26 @@
 
   <div class="products" *ngIf="!loading">
     <div class="grid">
-      <div class="product" *ngFor="let p of products">
-        <img [src]="imageUrl(p.raw?.image || p.image)" alt="{{ p.name }}" (error)="handleImgError($event)" />
-        <div class="img-debug"><a [href]="imageUrl(p.raw?.image || p.image)" target="_blank">{{ imageUrl(p.raw?.image || p.image) }}</a></div>
+      <div class="product" *ngFor="let p of visibleProducts">
         <div class="meta">
+          <div class="brand" *ngIf="p.raw?.brand || p.raw?.brand?.name || p.raw?.brand?.name">{{ p.raw?.brand?.name || p.raw?.brand?.name }}</div>
           <div class="name">{{ p.name }}</div>
           <div class="price">R$ {{ p.price }}</div>
           <button class="btn-add" (click)="addToCart(p)">Adicionar ao carrinho</button>
         </div>
       </div>
+    </div>
+    <!-- Pagination controls -->
+    <div class="pagination" *ngIf="useServerPaging">
+      <button class="btn-secondary" [disabled]="serverPage <= 1" (click)="goToPage(serverPage - 1)">Anterior</button>
+      <span class="page-info">Página {{ serverPage }}{{ serverLastPage ? ' de ' + serverLastPage : '' }}</span>
+      <button class="btn-secondary" [disabled]="!hasMore" (click)="goToPage(serverPage + 1)">Próxima</button>
+    </div>
+
+    <div class="pagination" *ngIf="!useServerPaging">
+      <button class="btn-secondary" [disabled]="currentPage <= 1" (click)="goToPage(currentPage - 1)">Anterior</button>
+      <span class="page-info">Página {{ currentPage }}</span>
+      <button class="btn-secondary" [disabled]="visibleProducts.length >= products.length" (click)="goToPage(currentPage + 1)">Próxima</button>
     </div>
   </div>
 </section>

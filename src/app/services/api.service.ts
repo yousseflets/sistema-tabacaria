@@ -56,6 +56,33 @@ export class ApiService {
     return obs;
   }
 
+  // Server-side paged products for a category. Works with json-server using
+  // nested filter `category.id` and `_page`/`_limit` query params.
+  // Returns paged items and optional meta (compatible with Laravel/Pagination or json-server style)
+  getProductsByCategoryPaged(categoryId: number | string, page = 1, limit = 20): Observable<{ items: Product[]; meta?: any }> {
+    const key = `${categoryId}:page:${page}:limit:${limit}`;
+    const cached = (this as any)["_cache_products_" + key] as Observable<{ items: Product[]; meta?: any }> | undefined;
+    if (cached) return cached;
+
+    // Try Laravel-style pagination first (category_id, page, per_page). Fall back to json-server style.
+    const laravelUrl = `${this.base}/products?category_id=${categoryId}&page=${page}&per_page=${limit}`;
+    const jsonServerUrl = `${this.base}/products?category.id=${categoryId}&_page=${page}&_limit=${limit}`;
+
+    const obs = this.http.get<any>(laravelUrl).pipe(
+      // If laravelUrl fails or returns unexpected shape, the catch in the caller will handle fallback.
+      map(res => {
+        if (res && res.data) return { items: res.data as Product[], meta: res.meta };
+        // If backend returned array directly, treat as items
+        if (Array.isArray(res)) return { items: res as Product[], meta: undefined };
+        return { items: (res && res.items) ? res.items as Product[] : [] as Product[], meta: res && res.meta ? res.meta : undefined };
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+    // Note: callers may choose to call jsonServerUrl instead if needed.
+    (this as any)["_cache_products_" + key] = obs;
+    return obs;
+  }
+
   // Prefer backend route that returns products for a category resource.
   // Ex: GET /categories/:id/products
   getProductsByCategoryId(categoryId: number | string): Observable<Product[]> {

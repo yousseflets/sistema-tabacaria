@@ -3,12 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CATEGORIES } from '../data/categories';
 import { Category as CategoryModel } from '../models/category';
-import { map } from 'rxjs/operators';
+import { map, switchMap, catchError } from 'rxjs/operators';
+import { combineLatest, of, Observable } from 'rxjs';
 import { ApiService } from '../services/api.service';
 import { API_BASE_URL } from '../app.config';
 import { Product } from '../models/product';
-import { Observable, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+// imports consolidated above
 
 @Component({
   selector: 'app-home',
@@ -44,6 +44,7 @@ export class Home implements OnInit, OnDestroy {
   })();
 
   products$!: Observable<Product[]>;
+  grouped$!: Observable<Array<{ category: CategoryModel; products: Product[] }>>;
 
   testimonials = [
     { name: 'João', text: 'Melhor atendimento e produtos de qualidade.' },
@@ -92,6 +93,22 @@ export class Home implements OnInit, OnDestroy {
     );
     this.products$ = this.api.getProducts().pipe(
       catchError(() => of(this.fallbackProducts))
+    );
+
+    // fetch a small page of products per category (server-side pagination) to improve load time
+    this.grouped$ = this.categories$.pipe(
+      switchMap(cats => {
+        if (!cats || cats.length === 0) return of([]);
+        const requests = cats.map(c =>
+          this.api.getProductsByCategoryPaged((c.id as any) || c.slug, 1, 6).pipe(
+            map(res => ({ category: c, products: res.items || [] })),
+            catchError(() => of({ category: c, products: [] }))
+          )
+        );
+        return combineLatest(requests).pipe(
+          map(results => results.filter(g => g.products && g.products.length > 0))
+        );
+      })
     );
 
     this.startAuto();
