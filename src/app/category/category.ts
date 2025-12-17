@@ -7,8 +7,8 @@ import { CartService } from '../services/cart.service';
 import { ApiService } from '../services/api.service';
 import { API_BASE_URL } from '../app.config';
 import { Product } from '../models/product';
-import { catchError, switchMap, tap, map } from 'rxjs/operators';
-import { of, Subscription } from 'rxjs';
+import { catchError, switchMap, tap, map, delay, take } from 'rxjs/operators';
+import { of, Subscription, merge } from 'rxjs';
 
 @Component({
 	selector: 'app-category',
@@ -58,6 +58,7 @@ export class Category implements OnInit, OnDestroy {
 	) {}
 
 	ngOnInit(): void {
+		console.debug('[Category] init');
 		this.sub = this.route.paramMap.pipe(
 			switchMap((params: ParamMap) => {
 				const categoryParam = params.get('category') || '';
@@ -74,21 +75,36 @@ export class Category implements OnInit, OnDestroy {
 						if (found && (found as any).id) {
 							this.name = found.name || this.name;
 							const id = (found as any).id;
-							return this.api.getProductsByCategoryPaged(id, 1, this.perPage).pipe(
-								tap((res: any) => {
-									this.useServerPaging = true;
-									this.serverPage = 1;
-									if (res && res.meta) {
-										this.serverLastPage = res.meta.last_page || res.meta.lastPage || res.meta.total_pages || undefined;
-										this.hasMore = (res.meta.current_page || 1) < (this.serverLastPage || 1);
-									}
+							// preferred route observable (may return array or {items,meta})
+							const route$ = this.api.getProductsByCategoryRoute(id).pipe(
+								map((res: any) => {
+									if (Array.isArray(res)) return res as Product[];
+									if (res && res.items && Array.isArray(res.items)) return res.items as Product[];
+									if (res && res.data && Array.isArray(res.data)) return res.data as Product[];
+									return [] as Product[];
 								}),
-								map((res: any) => (res && (res as any).items) ? (res as any).items as Product[] : (res as unknown as Product[])),
-								catchError(() => this.api.getProductsByCategoryRoute(id)),
-								catchError(() => this.api.getProductsByCategoryId(id)),
-								catchError(() => this.api.getProductsByCategory(id)),
-								catchError(() => of([]))
+								tap(arr => console.debug('[Category] route products length=', arr.length)),
+								catchError(err => {
+									console.warn('[Category] route failed', err);
+									return of([] as Product[]);
+								})
 							);
+
+							// client fallback that filters all products (starts after short delay)
+							const clientFallback$ = this.api.getProducts().pipe(
+								map(all => this.filterProductsByParam(all || [], categoryParam)),
+								tap(arr => console.debug('[Category] client fallback length=', (arr||[]).length)),
+								catchError(err => {
+									console.warn('[Category] client fallback error', err);
+									return of([] as Product[]);
+								})
+							);
+
+							// merge: prefer route$ but if it doesn't emit quickly, clientFallback$ (delayed) will provide results
+							return merge(
+								route$,
+								clientFallback$.pipe(delay(300))
+							).pipe(take(1));
 						}
 						return this.api.getProducts().pipe(
 							switchMap(all => of(this.filterProductsByParam(all || [], categoryParam)))
@@ -108,7 +124,7 @@ export class Category implements OnInit, OnDestroy {
 			error: (err) => {
 				console.error('[Category] failed to load products', err);
 				this.clearFallbackTimer();
-				this.errorMessage = 'Erro ao carregar produtos.';
+				this.errorMessage = 'Erro ao carregar produtos: ' + (err && err.message ? err.message : JSON.stringify(err));
 				this.loading = false;
 			}
 		});
@@ -125,11 +141,12 @@ export class Category implements OnInit, OnDestroy {
 					},
 					error: e => {
 						console.error('[Category] fallback getProducts failed', e);
+						this.errorMessage = 'Erro ao buscar produtos (fallback): ' + (e && e.message ? e.message : JSON.stringify(e));
 						this.loading = false;
 					}
 					});
 				}
-			}, 100);
+		}, 300);
 	}
 
 	ngOnDestroy(): void {

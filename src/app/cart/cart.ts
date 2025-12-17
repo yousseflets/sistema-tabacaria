@@ -15,9 +15,7 @@ export class Cart {
   private cepTimer: any = null;
   items: CartItem[] = [];
   showConfirm = false;
-  // checkout modal state
   showCheckout = false;
-  // address fields
   cep = '';
   street = '';
   number = '';
@@ -33,12 +31,10 @@ export class Cart {
     if (this.city || this.state) parts.push([this.city, this.state].filter(Boolean).join(' - '));
     return parts.join(' - ');
   }
-  // whether delivery fee should be calculated automatically from address
   autoCalculateDelivery = true;
   payment: 'dinheiro' | 'pix' | 'credito' | 'debito' = 'pix';
-  estimatedAppFare = 0; // valor informado do Uber/99
+  estimatedAppFare = 0;
   deliveryFee = 0;
-  // store origin address (saida)
   readonly storeAddress = 'Rua Jayr de Lima Ferreira, 100 - Jardim Cintia, Mogi das Cruzes - SP, 08830-265';
 
   constructor(private cart: CartService) {
@@ -50,15 +46,11 @@ export class Cart {
   }
 
   decrease(i: CartItem) {
-    // decrease by setting qty -1: naive implementation
     const current = this.cart.getItems();
     const found = current.find(x => x.id === i.id);
     if (!found) return;
     if ((found.qty || 1) <= 1) {
-      // remove
       const remaining = current.filter(x => x.id !== i.id);
-      // replace
-      // direct nexting for simplicity
       (this.cart as any).itemsSubject.next(remaining);
     } else {
       found.qty = (found.qty || 1) - 1;
@@ -94,7 +86,6 @@ export class Cart {
       return;
     }
     const est = Number(this.estimatedAppFare) || 0;
-    // simple policy: delivery fee equals 60% of app fare, min 5
     const fee = Math.max(5, est * 0.6);
     this.deliveryFee = Number(fee.toFixed(2));
   }
@@ -119,7 +110,6 @@ export class Cart {
   }
 
   onCepInput() {
-    // debounce the CEP input and trigger lookup automatically when 8 digits entered
     if (this.cepTimer) clearTimeout(this.cepTimer);
     const cepOnly = (this.cep || '').replace(/\D/g, '');
     if (cepOnly.length === 8) {
@@ -162,7 +152,7 @@ export class Cart {
   async finalizeAsImage() {
     const subtotal = parseFloat(this.total());
     const grand = subtotal;
-    const phone = '5511997630847';
+    const phone = '5511973087033';
     const lines: string[] = [];
     lines.push('Pedido de Compra');
     lines.push('-------------------------');
@@ -189,7 +179,6 @@ export class Cart {
   }
 
   confirmFinalize() {
-    // close confirm modal then finalize
     this.showConfirm = false;
     this.finalizeAsImage();
   }
