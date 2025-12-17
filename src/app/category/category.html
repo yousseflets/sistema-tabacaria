@@ -1,10 +1,12 @@
 <section class="category container">
   <h1>{{ name }}</h1>
   <div *ngIf="loading" class="loading">Carregando produtos...</div>
+  <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
 
   <div class="products" *ngIf="!loading">
     <div class="grid">
       <div class="product" *ngFor="let p of visibleProducts">
+        <img *ngIf="(p.image || p.raw?.image)" [src]="imageUrl(p)" [alt]="p.name" />
         <div class="meta">
           <div class="brand" *ngIf="p.raw?.brand || p.raw?.brand?.name || p.raw?.brand?.name">{{ p.raw?.brand?.name || p.raw?.brand?.name }}</div>
           <div class="name">{{ p.name }}</div>

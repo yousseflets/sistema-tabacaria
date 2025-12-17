@@ -1,218 +1,184 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, ParamMap } from '@angular/router';
 import { CATEGORIES } from '../data/categories';
 import { Category as CategoryModel } from '../models/category';
 import { CartService } from '../services/cart.service';
 import { ApiService } from '../services/api.service';
-import { Product } from '../models/product';
-import { catchError, finalize } from 'rxjs/operators';
-import { of } from 'rxjs';
 import { API_BASE_URL } from '../app.config';
+import { Product } from '../models/product';
+import { catchError, switchMap } from 'rxjs/operators';
+import { of, Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-category',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './category.html',
-  styleUrls: ['./category.scss']
+	selector: 'app-category',
+	standalone: true,
+	imports: [CommonModule],
+	templateUrl: './category.html',
+	styleUrls: ['./category.scss']
 })
-export class Category {
-  slug = '';
-  name = '';
-  loading = false;
-  products = [] as Array<{ id: string; name: string; price: string; image: string; raw?: Product }>;
-  // Client-side pagination to avoid rendering all items at once
-  pageSize = 20;
-  currentPage = 1;
-  // Server-side pagination state
-  useServerPaging = true;
-  serverPage = 1;
-  hasMore = true;
-  serverLastPage: number | null = null;
-  currentCategoryId: number | string | null = null;
+export class Category implements OnInit, OnDestroy {
+	name = '';
+	loading = false;
+	errorMessage = '';
+	products: Product[] = [];
+	visibleProducts: any[] = [];
+	currentPage = 1;
+	perPage = 12;
 
-  constructor(
-    private route: ActivatedRoute,
-    private cart: CartService,
-    private api: ApiService
-  ) {
-    this.route.paramMap.subscribe(pm => {
-      const s = pm.get('category') || '';
-      this.updateForSlug(s);
-    });
-  }
+	// Server/local paging flags (used by template)
+	useServerPaging = false;
+	serverPage = 1;
+	serverLastPage?: number;
+	hasMore = false;
 
-  private updateForSlug(s: string) {
-    this.slug = s;
-    // fetch categories to find matching slug and then load products by category id
-    this.api.getCategories().pipe(
-      catchError(() => of(CATEGORIES as CategoryModel[]))
-    ).subscribe(list => {
-      const found = list.find(c => (c.slug || '').toLowerCase() === s.toLowerCase());
-      this.name = found ? found.name : s.replace(/-/g, ' ');
-      if (found && found.id) {
-        this.currentCategoryId = found.id;
-        // Try server-side pagination first; fallback to previous endpoints if unavailable.
-        this.serverPage = 1;
-        this.hasMore = true;
-        this.loadProductsPage(found.id, 1);
-      } else {
-        // fallback: try to load and filter by category name from products
-        this.loadProductsForCategoryName(this.name);
-      }
-    });
-  }
+	private sub?: Subscription;
+	private fallbackTimer?: any;
 
-  private loadProductsPage(categoryId: number | string, page = 1) {
-    this.loading = true;
-    this.api.getProductsByCategoryPaged(categoryId, page, this.pageSize).pipe(
-      catchError(() => {
-        // If paged route not available, fallback to existing category endpoints
-        this.loadProductsByCategoryId(categoryId);
-        return of({ items: [] as Product[], meta: undefined });
-      }),
-      finalize(() => { this.loading = false; })
-    ).subscribe(result => {
-      const list = (result && (result as any).items) ? (result as any).items as Product[] : [] as Product[];
-      const meta = (result && (result as any).meta) ? (result as any).meta : undefined;
+	constructor(
+		private route: ActivatedRoute,
+		private api: ApiService,
+		private cart: CartService
+	) {}
 
-      const mapped = (list || []).map(p => ({
-        id: String(p.id),
-        name: p.name,
-        price: (Number(p.price) || 0).toFixed(2),
-        image: p.image || `https://picsum.photos/seed/${this.slug}${p.id}/400/300`,
-        raw: p
-      }));
+	ngOnInit(): void {
+		this.sub = this.route.paramMap.pipe(
+			switchMap((params: ParamMap) => {
+				const categoryParam = params.get('category') || '';
+				console.debug('[Category] route param category =', categoryParam);
+				this.resetState();
+				this.name = this.humanize(categoryParam);
+				this.loading = true;
+				this.errorMessage = '';
 
-      if (page === 1) this.products = mapped;
-      else this.products = this.products.concat(mapped);
+				return this.api.getCategories().pipe(
+					switchMap(list => {
+						const found = (list || []).find(c => (c.slug && c.slug === categoryParam) || (String(c.id) === categoryParam) || (c.name && c.name.toLowerCase() === categoryParam.toLowerCase()));
+						console.debug('[Category] categories loaded count=', (list||[]).length, 'found=', found);
+						if (found && (found as any).id) {
+							this.name = found.name || this.name;
+							const id = (found as any).id;
+							// Try new route first: /products/category/{id}
+							return this.api.getProductsByCategoryRoute(id).pipe(
+								catchError(() => this.api.getProductsByCategoryId(id)),
+								catchError(() => this.api.getProductsByCategory(id)),
+								catchError(() => of([]))
+							);
+						}
 
-      // Determine hasMore using meta if provided, otherwise fall back to pageSize heuristic
-      if (meta && typeof meta.current_page !== 'undefined' && typeof meta.last_page !== 'undefined') {
-        this.serverPage = meta.current_page || page;
-        this.serverLastPage = meta.last_page || null;
-        this.hasMore = (meta.current_page || page) < (meta.last_page || (meta.current_page || page));
-      } else {
-        this.serverPage = page;
-        this.serverLastPage = null;
-        this.hasMore = mapped.length === this.pageSize;
-      }
-    });
-  }
+						// Fallback: fetch all products and filter on client
+						return this.api.getProducts().pipe(
+							switchMap(all => of(this.filterProductsByParam(all || [], categoryParam)))
+						);
+					})
+				);
+			})
+		).subscribe({
+			next: (items: Product[]) => {
+				console.debug('[Category] items loaded:', items && items.length, items && items.slice ? items.slice(0,5) : items);
+				this.clearFallbackTimer();
+				this.products = (items || []).map(it => ({ ...it, raw: it }));
+				this.currentPage = 1;
+				this.updateVisibleProducts();
+				this.loading = false;
+			},
+			error: (err) => {
+				console.error('[Category] failed to load products', err);
+				this.clearFallbackTimer();
+				this.errorMessage = 'Erro ao carregar produtos.';
+				this.loading = false;
+			}
+		});
 
-  // Navigate to a specific page (works for server or client paging)
-  goToPage(page: number) {
-    if (page < 1) return;
-    if (this.useServerPaging && this.currentCategoryId) {
-      // reset and load requested server page
-      this.products = [];
-      this.loadProductsPage(this.currentCategoryId, page);
-      return;
-    }
+		// fallback: if nothing loaded in X ms, fetch all products and filter client-side
+		this.fallbackTimer = setTimeout(() => {
+			if ((this.products || []).length === 0) {
+				console.debug('[Category] fallback timer fired - fetching all products');
+				this.api.getProducts().subscribe({
+					next: all => {
+						const items = this.filterProductsByParam(all || [], this.name || '');
+						this.products = (items || []).map(it => ({ ...it, raw: it }));
+						this.updateVisibleProducts();
+						this.loading = false;
+					},
+					error: e => {
+						console.error('[Category] fallback getProducts failed', e);
+						this.loading = false;
+					}
+				});
+			}
+		}, 1500);
+	}
 
-    // client-side: set current page (will expand visibleProducts)
-    this.currentPage = page;
-  }
+	ngOnDestroy(): void {
+		this.sub?.unsubscribe();
+		this.clearFallbackTimer();
+	}
 
-  private loadProductsByCategoryId(categoryId: number | string) {
-    this.loading = true;
-    this.api.getProductsByCategory(categoryId).pipe(
-      catchError(() => of([])),
-      finalize(() => { this.loading = false; })
-    ).subscribe(list => {
-      this.products = (list || []).map(p => ({
-        id: String(p.id),
-        name: p.name,
-        price: (Number(p.price) || 0).toFixed(2),
-        image: p.image || `https://picsum.photos/seed/${this.slug}${p.id}/400/300`,
-        raw: p
-      }));
-    });
-  }
+	private clearFallbackTimer() {
+		if (this.fallbackTimer) {
+			clearTimeout(this.fallbackTimer);
+			this.fallbackTimer = undefined;
+		}
+	}
 
-  private loadProductsForCategoryName(name: string) {
-    this.loading = true;
-    this.api.getProducts().pipe(
-      catchError(() => of([])),
-      finalize(() => { this.loading = false; })
-    ).subscribe(list => {
-      const targetName = (name || '').toLowerCase();
-      const targetSlug = (this.slug || '').toLowerCase();
+	addToCart(p: Product) {
+		this.cart.add({ id: String(p.id), name: p.name, price: String(p.price), image: p.image, qty: 1 });
+	}
 
-      const filtered = list.filter(p => {
-        if (!p) return false;
+	goToPage(page: number) {
+		if (page < 1) return;
+		this.currentPage = page;
+		this.updateVisibleProducts();
+	}
 
-        // If product has nested category object
-        if (p.category && typeof p.category === 'object') {
-          const catObj: any = p.category;
-          if (catObj.name && String(catObj.name).toLowerCase() === targetName) return true;
-          if (catObj.slug && String(catObj.slug).toLowerCase() === targetSlug) return true;
-          if (catObj.id && String(catObj.id) === String(catObj.id)) return true;
-        }
+	private updateVisibleProducts() {
+		const start = (this.currentPage - 1) * this.perPage;
+		this.visibleProducts = this.products.slice(start, start + this.perPage);
+	}
 
-        // If product has category as id or slug fields
-        if (p.categoryId && String(p.categoryId) === String(this.slug || p.categoryId)) return true;
-        if ((p as any).category_id && String((p as any).category_id) === String(this.slug || (p as any).category_id)) return true;
+	private resetState() {
+		this.products = [];
+		this.visibleProducts = [];
+		this.currentPage = 1;
+		this.errorMessage = '';
+		this.loading = false;
+	}
 
-        // If product stores category as string (slug)
-        if (typeof p.category === 'string') {
-          const c = String(p.category).toLowerCase();
-          if (c === targetSlug || c === targetName) return true;
-        }
+	private humanize(slug: string) {
+		if (!slug) return '';
+		return slug.replace(/[-_]/g, ' ').replace(/\b\w/g, s => s.toUpperCase());
+	}
 
-        return false;
-      });
-      this.products = filtered.map(p => ({
-        id: String(p.id),
-        name: p.name,
-        price: (Number(p.price) || 0).toFixed(2),
-        image: p.image || `https://picsum.photos/seed/${this.slug}${p.id}/400/300`,
-        raw: p
-      }));
-      this.currentPage = 1;
-    });
-  }
+	private filterProductsByParam(list: Product[], param: string): Product[] {
+		const numeric = Number(param);
+		return (list || []).filter(p => {
+			const catId = (p as any).categoryId || (p as any).category_id || (p.category && (p.category as any).id) || (p.category && (p.category as any).slug);
+			const brandId = (p as any).brandId || (p as any).brand_id || (p.brand && (p.brand as any).id);
+			if (!param) return true;
+			if (!isNaN(numeric) && numeric) {
+				if (String(catId) === String(numeric)) return true;
+				if (String(brandId) === String(numeric)) return true;
+			}
+			if (typeof catId === 'string' && catId.toLowerCase() === param.toLowerCase()) return true;
+			if (p.category && (p.category as any).slug && String((p.category as any).slug).toLowerCase() === String(param).toLowerCase()) return true;
+			if (p.name && String(p.name).toLowerCase().indexOf(param.toLowerCase()) !== -1) return true;
+			if (p.brand && (p.brand as any).name && String((p.brand as any).name).toLowerCase().indexOf(param.toLowerCase()) !== -1) return true;
+			return false;
+		});
+	}
 
-  // visible subset of products for the current page
-  get visibleProducts() {
-    if (this.useServerPaging) return this.products;
-    const end = this.currentPage * this.pageSize;
-    return this.products.slice(0, end);
-  }
+	imageUrl(p: Product) {
+		const img = (p as any).image || (p as any).raw?.image;
+		if (!img) return '';
+		// absolute URLs
+		if (/^https?:\/\//i.test(img)) return img;
+		// leading slash -> assume already absolute path on current host
+		if (img.startsWith('/')) return img;
+		// otherwise prefix with backend base (remove trailing /api if present)
+		const base = String(API_BASE_URL).replace(/\/api\/?$/, '');
+		return `${base}/${img}`;
+	}
 
-  loadMore() {
-    if (this.useServerPaging && this.currentCategoryId && this.hasMore) {
-      this.loadProductsPage(this.currentCategoryId, this.serverPage + 1);
-      return;
-    }
-
-    this.currentPage += 1;
-  }
-
-  imageUrl(image?: string) {
-    const origin = (API_BASE_URL || '').replace(/\/api\/?$/, '');
-    if (!image) return `https://picsum.photos/400/300`;
-    if (image.startsWith('http') || image.startsWith('//')) return image;
-
-    if (image.startsWith('storage/')) return origin + '/' + image;
-    if (image.startsWith('/storage/')) return origin + image;
-    if (image.startsWith('images/')) return origin + '/storage/' + image;
-    if (image.startsWith('/images/')) return origin + '/storage' + image;
-
-    if (image.startsWith('/')) return origin + image;
-    return origin + '/' + image;
-  }
-
-  handleImgError(ev: Event) {
-    const img = ev.target as HTMLImageElement;
-    if (img && img.src && !img.getAttribute('data-fallback')) {
-      img.setAttribute('data-fallback', '1');
-      img.src = '/assets/placeholder.png';
-    }
-  }
-
-  addToCart(p: { id: string; name: string; price: string; image: string; raw?: Product }) {
-    this.cart.add({ id: p.id, name: p.name, price: p.price, image: p.image, qty: 1 });
-  }
 }
+
