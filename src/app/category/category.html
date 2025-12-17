@@ -1,12 +1,19 @@
 <section class="category container">
   <h1>{{ name }}</h1>
-  <div *ngIf="loading" class="loading">Carregando produtos...</div>
+  <div *ngIf="loading" class="loading">
+    <div class="spinner" role="status" aria-label="Carregando produtos">
+      <svg viewBox="0 0 50 50" class="spinner-svg">
+        <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="4"></circle>
+      </svg>
+    </div>
+    <div class="loading-text">Carregando produtos...</div>
+  </div>
   <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
 
   <div class="products" *ngIf="!loading">
     <div class="grid">
       <div class="product" *ngFor="let p of visibleProducts">
-        <img *ngIf="(p.image || p.raw?.image)" [src]="imageUrl(p)" [alt]="p.name" />
+        <img *ngIf="(p.image || p.raw?.image || p.raw?.image_url || p.image_url)" [src]="imageUrl(p)" [alt]="p.name" loading="lazy" />
         <div class="meta">
           <div class="brand" *ngIf="p.raw?.brand || p.raw?.brand?.name || p.raw?.brand?.name">{{ p.raw?.brand?.name || p.raw?.brand?.name }}</div>
           <div class="name">{{ p.name }}</div>
@@ -15,7 +22,6 @@
         </div>
       </div>
     </div>
-    <!-- Pagination controls -->
     <div class="pagination" *ngIf="useServerPaging">
       <button class="btn-secondary" [disabled]="serverPage <= 1" (click)="goToPage(serverPage - 1)">Anterior</button>
       <span class="page-info">Página {{ serverPage }}{{ serverLastPage ? ' de ' + serverLastPage : '' }}</span>
@@ -23,9 +29,29 @@
     </div>
 
     <div class="pagination" *ngIf="!useServerPaging">
-      <button class="btn-secondary" [disabled]="currentPage <= 1" (click)="goToPage(currentPage - 1)">Anterior</button>
-      <span class="page-info">Página {{ currentPage }}</span>
-      <button class="btn-secondary" [disabled]="visibleProducts.length >= products.length" (click)="goToPage(currentPage + 1)">Próxima</button>
+      <button class="page btn" [disabled]="currentPage <= 1" (click)="goToPage(1)">«</button>
+      <button class="page btn" [disabled]="currentPage <= 1" (click)="goToPage(currentPage - 1)">Anterior</button>
+
+      <ng-container *ngFor="let p of pageNumbers">
+        <button class="page btn" [class.active]="p === currentPage" (click)="goToPage(p)">{{ p }}</button>
+      </ng-container>
+
+      <button class="page btn" [disabled]="currentPage >= totalPages" (click)="goToPage(currentPage + 1)">Próxima</button>
+      <button class="page btn" [disabled]="currentPage >= totalPages" (click)="goToPage(totalPages)">»</button>
+    </div>
+  </div>
+
+  <!-- Skeletons while loading (appear when loading true) -->
+  <div class="products" *ngIf="loading">
+    <div class="grid">
+      <div class="product skeleton" *ngFor="let i of [].constructor(perPage)">
+        <div class="image-skel"></div>
+        <div class="meta">
+          <div class="s-line s-line-short"></div>
+          <div class="s-line"></div>
+          <div class="s-line s-line-small"></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>

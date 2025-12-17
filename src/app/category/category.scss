@@ -8,6 +8,35 @@
 .category .btn-add{display:inline-block;margin-top:0.6rem;padding:0.45rem 0.8rem;background:var(--text);color:var(--bg);border-radius:6px;border:0;cursor:pointer;font-weight:600}
 .category .btn-add:hover{opacity:0.9}
 
+/* Pagination modern styles */
+.category .pagination{display:flex;align-items:center;gap:0.5rem;margin-top:1rem; justify-items: center; justify-content: center;}
+.category .pagination .btn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:0.6rem 0.9rem;border-radius:8px;color:var(--text);cursor:pointer}
+.category .pagination .btn[disabled]{opacity:0.35;cursor:not-allowed}
+.category .pagination .page.active{background:var(--text);color:var(--bg);box-shadow:0 6px 18px rgba(0,0,0,0.35)}
+.category .pagination .page{min-width:44px;text-align:center}
+
+@media (max-width:800px){
+  .category .pagination{flex-wrap:wrap;gap:0.35rem}
+  .category .pagination .btn{padding:0.5rem 0.6rem}
+}
+
+/* Loading spinner */
+.category .loading{display:flex;flex-direction:column;align-items:center;gap:0.6rem;margin:1.2rem 0;color:var(--muted)}
+.category .spinner{width:48px;height:48px}
+.category .spinner-svg{width:100%;height:100%;transform-origin:center;animation:rotate 1s linear infinite}
+.category .spinner .path{stroke:var(--text);stroke-linecap:round;stroke-dasharray:90;stroke-dashoffset:0;animation:dash 1.2s ease-in-out infinite}
+.category .loading-text{font-size:0.95rem;color:var(--muted)}
+
+@keyframes rotate{100%{transform:rotate(360deg)}}
+@keyframes dash{0%{stroke-dasharray:1,200;stroke-dashoffset:0}50%{stroke-dasharray:90,200;stroke-dashoffset:-35px}100%{stroke-dasharray:90,200;stroke-dashoffset:-124px}}
+
+/* skeleton */
+.category .product.skeleton{background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.03));border-radius:8px;padding:0.5rem;border:1px solid rgba(255,255,255,0.02)}
+.category .product.skeleton .image-skel{height:160px;background:linear-gradient(90deg,#111,#222);border-radius:6px;margin-bottom:0.6rem}
+.category .s-line{height:12px;background:linear-gradient(90deg,#111,#222);border-radius:4px;margin:8px 0}
+.category .s-line-short{width:40%}
+.category .s-line-small{width:30%}
+
 @media (max-width:800px){
   .category .grid{grid-template-columns:1fr}
   .category{padding:1.6rem 0.8rem}

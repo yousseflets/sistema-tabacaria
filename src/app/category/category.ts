@@ -7,7 +7,7 @@ import { CartService } from '../services/cart.service';
 import { ApiService } from '../services/api.service';
 import { API_BASE_URL } from '../app.config';
 import { Product } from '../models/product';
-import { catchError, switchMap } from 'rxjs/operators';
+import { catchError, switchMap, tap, map } from 'rxjs/operators';
 import { of, Subscription } from 'rxjs';
 
 @Component({
@@ -26,7 +26,23 @@ export class Category implements OnInit, OnDestroy {
 	currentPage = 1;
 	perPage = 12;
 
-	// Server/local paging flags (used by template)
+	totalPages = 1;
+
+	get pageNumbers(): number[] {
+		const total = Math.max(1, Math.ceil((this.products || []).length / this.perPage));
+		this.totalPages = total;
+		const maxButtons = 5;
+		let start = Math.max(1, this.currentPage - Math.floor(maxButtons / 2));
+		let end = start + maxButtons - 1;
+		if (end > total) {
+			end = total;
+			start = Math.max(1, end - maxButtons + 1);
+		}
+		const arr: number[] = [];
+		for (let i = start; i <= end; i++) arr.push(i);
+		return arr;
+	}
+
 	useServerPaging = false;
 	serverPage = 1;
 	serverLastPage?: number;
@@ -58,15 +74,22 @@ export class Category implements OnInit, OnDestroy {
 						if (found && (found as any).id) {
 							this.name = found.name || this.name;
 							const id = (found as any).id;
-							// Try new route first: /products/category/{id}
-							return this.api.getProductsByCategoryRoute(id).pipe(
+							return this.api.getProductsByCategoryPaged(id, 1, this.perPage).pipe(
+								tap((res: any) => {
+									this.useServerPaging = true;
+									this.serverPage = 1;
+									if (res && res.meta) {
+										this.serverLastPage = res.meta.last_page || res.meta.lastPage || res.meta.total_pages || undefined;
+										this.hasMore = (res.meta.current_page || 1) < (this.serverLastPage || 1);
+									}
+								}),
+								map((res: any) => (res && (res as any).items) ? (res as any).items as Product[] : (res as unknown as Product[])),
+								catchError(() => this.api.getProductsByCategoryRoute(id)),
 								catchError(() => this.api.getProductsByCategoryId(id)),
 								catchError(() => this.api.getProductsByCategory(id)),
 								catchError(() => of([]))
 							);
 						}
-
-						// Fallback: fetch all products and filter on client
 						return this.api.getProducts().pipe(
 							switchMap(all => of(this.filterProductsByParam(all || [], categoryParam)))
 						);
@@ -90,7 +113,6 @@ export class Category implements OnInit, OnDestroy {
 			}
 		});
 
-		// fallback: if nothing loaded in X ms, fetch all products and filter client-side
 		this.fallbackTimer = setTimeout(() => {
 			if ((this.products || []).length === 0) {
 				console.debug('[Category] fallback timer fired - fetching all products');
@@ -105,9 +127,9 @@ export class Category implements OnInit, OnDestroy {
 						console.error('[Category] fallback getProducts failed', e);
 						this.loading = false;
 					}
-				});
-			}
-		}, 1500);
+					});
+				}
+			}, 100);
 	}
 
 	ngOnDestroy(): void {
@@ -127,7 +149,9 @@ export class Category implements OnInit, OnDestroy {
 	}
 
 	goToPage(page: number) {
-		if (page < 1) return;
+		if (page < 1) page = 1;
+		const total = Math.max(1, Math.ceil((this.products || []).length / this.perPage));
+		if (page > total) page = total;
 		this.currentPage = page;
 		this.updateVisibleProducts();
 	}
@@ -169,13 +193,10 @@ export class Category implements OnInit, OnDestroy {
 	}
 
 	imageUrl(p: Product) {
-		const img = (p as any).image || (p as any).raw?.image;
+		const img = (p as any).image_url || (p as any).image || (p as any).raw?.image_url || (p as any).raw?.image;
 		if (!img) return '';
-		// absolute URLs
 		if (/^https?:\/\//i.test(img)) return img;
-		// leading slash -> assume already absolute path on current host
 		if (img.startsWith('/')) return img;
-		// otherwise prefix with backend base (remove trailing /api if present)
 		const base = String(API_BASE_URL).replace(/\/api\/?$/, '');
 		return `${base}/${img}`;
 	}

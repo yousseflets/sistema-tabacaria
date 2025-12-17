@@ -86,11 +86,18 @@ export class ApiService {
   }
 
   getProductsByCategoryRoute(categoryId: number | string): Observable<Product[]> {
+    const key = `route:${String(categoryId)}`;
+    const cached = (this as any)['_cache_products_' + key] as Observable<Product[]> | undefined;
+    if (cached) return cached;
+
     const url = `${this.base}/products/category/${categoryId}`;
     console.debug('[ApiService] getProductsByCategoryRoute ->', url);
-    return this.http.get<any>(url).pipe(
+    const obs = this.http.get<any>(url).pipe(
       tap(res => console.debug('[ApiService] response for products/category:', res && (res.data ? { dataLength: (res.data||[]).length } : typeof res))),
-      map(res => (res && res.data) ? res.data as Product[] : res as Product[])
+      map(res => (res && res.data) ? res.data as Product[] : res as Product[]),
+      shareReplay({ bufferSize: 1, refCount: true })
     );
+    (this as any)['_cache_products_' + key] = obs;
+    return obs;
   }
 }

@@ -22,7 +22,7 @@
         </button>
         <ul class="dropdown-menu" role="menu" [attr.aria-hidden]="!isProductsOpen" (mouseenter)="cancelClose()" (mouseleave)="closeMenuDelayed()">
           <li *ngFor="let c of categories" role="none">
-            <a role="menuitem" [routerLink]="['/produtos', c.slug]" (click)="closeMenuImmediate()">{{ c.name }}</a>
+            <a role="menuitem" [routerLink]="['/produtos', c.slug]" (click)="closeMenuImmediate()" (mouseenter)="prefetchCategory(c)">{{ c.name }}</a>
           </li>
         </ul>
       </div>

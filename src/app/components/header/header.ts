@@ -24,6 +24,14 @@ export class Header implements OnInit {
     });
   }
 
+  prefetchCategory(c: Category) {
+    if (!c) return;
+    const id = (c as any).id || (c as any).slug;
+    if (!id) return;
+    // Trigger api call (cached in ApiService) - don't subscribe body, just warm cache
+    this.api.getProductsByCategoryRoute(id).subscribe({ next: () => {}, error: () => {} });
+  }
+
   ngOnInit(): void {
     this.api.getCategories().subscribe({
       next: list => {
