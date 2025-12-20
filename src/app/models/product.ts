@@ -13,6 +13,8 @@ export interface Product {
   price: number;
   quantity?: number;
   image?: string;
+  image_url?: string;
+  raw?: any;
   categoryId?: number | string;
   active?: boolean | number;
   category?: Category;

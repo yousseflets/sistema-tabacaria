@@ -10,7 +10,7 @@
 .categories .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
 .categories .card{background:#ffffff;padding:1.5rem;border-radius:8px;box-shadow:none;text-align:center;color:var(--bg);border:1px solid rgba(255,255,255,0.03)}
 
-.carousel-wrap{position:relative;display:flex;align-items:center}
+.carousel-wrapper{position:relative;display:flex;align-items:center}
 .carousel{display:flex;gap:1rem;overflow-x:auto;padding:1rem 0;scroll-behavior:smooth}
 /* hide native horizontal scrollbar but keep scrolling functional */
 .carousel{
@@ -20,6 +20,8 @@
 .carousel::-webkit-scrollbar{display:none;height:0}
 .carousel{-webkit-overflow-scrolling:touch;touch-action:pan-y}
 .product{min-width:220px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:1rem;box-shadow:0 6px 18px rgba(0,0,0,0.35);color:var(--text);border:1px solid rgba(255,255,255,0.03);display:flex;flex-direction:column;justify-content:space-between;min-width:220px}
+.product .thumb{width:100%;height:140px;border-radius:10px;overflow:hidden;display:block;margin-bottom:0.6rem;background:linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.02))}
+.product .thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .card-top{height:100px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:linear-gradient(135deg, rgba(184,134,11,0.15), rgba(255,255,255,0.02));margin-bottom:0.6rem}
 .product-art{font-size:2.4rem;font-weight:700;color:#fff;background:rgba(0,0,0,0.25);padding:0.4rem 0.6rem;border-radius:6px}
 .meta{padding:0.2rem}
@@ -30,6 +32,12 @@
 .btn-link{background:transparent;color:#ffffff;}
 .product:hover{transform:translateY(-6px);transition:transform 220ms ease}
 .arrow{background:rgba(255,255,255,0.04);border:none;color:var(--text);padding:0.5rem 0.7rem;border-radius:6px;cursor:pointer}
+
+/* nav buttons for carousel */
+.carousel-wrapper .nav{position:absolute;top:50%;transform:translateY(-50%);z-index:10;background:rgba(0,0,0,0.5);border:none;color:#fff;width:44px;height:44px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer}
+.carousel-wrapper .nav.left{left:8px}
+.carousel-wrapper .nav.right{right:8px}
+.carousel-wrapper .nav:active{transform:translateY(-50%) scale(0.96)}
 
 .banner{height:70vh;background-image:linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),url('/banner-premium.jpg');background-size:cover;background-position:center;display:flex;align-items:center;background-color:#000}
 .banner-inner{max-width:1100px;margin:0 auto;color:var(--text);padding:2rem}
@@ -43,6 +51,7 @@
   .hero{height:40vh}
   .hero h1{font-size:1.6rem}
   .product{min-width:100%;padding:0.6rem}
+  .product .thumb{height:160px}
   .card-top{height:140px}
   .product-art{font-size:2.8rem}
   /* Stack testimonials vertically on mobile so content flows and vertical scroll works */

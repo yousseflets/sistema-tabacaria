@@ -12,24 +12,23 @@
 </section>
 <section class="products container">
   <h2>Produtos</h2>
-  <div class="groups">
-    <div class="group" *ngFor="let g of grouped$ | async">
-      <h3 class="group-title">{{ g.category.name }}</h3>
-      <div class="grid">
-        <div class="product" *ngFor="let p of g.products">
-          <div class="meta">
-            <div class="name">{{ p.name }}</div>
-            <div class="meta-row">
-              <small class="brand">{{ p.brand?.name }}</small>
-            </div>
-            <div class="price">R$ {{ (p.price | number:'1.2-2') }}</div>
-            <div class="actions">
-              <a class="btn-link" [routerLink]="['/produtos', g.category.slug]">Ver produtos</a>
-            </div>
+  <div class="carousel-wrapper">
+    <button class="nav left" (click)="scroll('prod-all','left')" aria-label="Esquerda">‹</button>
+    <div id="prod-all" class="grid carousel" (mouseenter)="pauseAuto()" (mouseleave)="resumeAuto()">
+      <div class="product" *ngFor="let p of combined$ | async">
+        <div class="thumb">
+          <img [src]="imageUrl(p.image || p.image_url || p.raw?.image || p.raw?.image_url)" (error)="handleImgError($event)" loading="lazy" [alt]="p.name">
+        </div>
+        <div class="meta">
+          <div class="name">{{ p.name }}</div>
+          <div class="meta-row">
+            <small class="brand">{{ p.brand?.name }}</small>
           </div>
+          <div class="price">R$ {{ (p.price | number:'1.2-2') }}</div>
         </div>
       </div>
     </div>
+    <button class="nav right" (click)="scroll('prod-all','right')" aria-label="Direita">›</button>
   </div>
 </section>
 

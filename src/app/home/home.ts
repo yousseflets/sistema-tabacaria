@@ -20,11 +20,13 @@ import { Product } from '../models/product';
 export class Home implements OnInit, OnDestroy {
   categories = CATEGORIES;
   categories$!: Observable<CategoryModel[]>;
+  // configurable: how many products per category to show in the carousel
+  productsPerCategory = 5;
 
   private fallbackProducts = (() => {
     const list: any[] = [];
     this.categories.forEach((c, ci) => {
-      for (let j = 0; j < 2; j++) {
+      for (let j = 0; j < this.productsPerCategory; j++) {
         const price = (29.9 + ((ci * 2 + j) % 6) * 5).toFixed(2);
         const seed = `${c.slug}-${Math.floor(Math.random() * 10000)}`;
         list.push({
@@ -45,6 +47,7 @@ export class Home implements OnInit, OnDestroy {
 
   products$!: Observable<Product[]>;
   grouped$!: Observable<Array<{ category: CategoryModel; products: Product[] }>>;
+  combined$!: Observable<Product[]>;
 
   testimonials = [
     { name: 'João', text: 'Melhor atendimento e produtos de qualidade.' },
@@ -100,14 +103,47 @@ export class Home implements OnInit, OnDestroy {
       switchMap(cats => {
         if (!cats || cats.length === 0) return of([]);
         const requests = cats.map(c =>
-          this.api.getProductsByCategoryPaged((c.id as any) || c.slug, 1, 6).pipe(
-            map(res => ({ category: c, products: res.items || [] })),
+          this.api.getProductsByCategoryRoute((c.id as any) || c.slug).pipe(
+            map((res: any) => {
+              // res may be Product[] or { items: Product[], meta }
+              if (Array.isArray(res)) return { category: c, products: res as Product[] };
+              if (res && res.items && Array.isArray(res.items)) return { category: c, products: res.items as Product[] };
+              if (res && res.data && Array.isArray(res.data)) return { category: c, products: res.data as Product[] };
+              return { category: c, products: [] };
+            }),
             catchError(() => of({ category: c, products: [] }))
           )
         );
         return combineLatest(requests).pipe(
           map(results => results.filter(g => g.products && g.products.length > 0))
         );
+      })
+    );
+
+    // combined list of products from all categories (flattened)
+    this.combined$ = this.grouped$.pipe(
+      map(groups => {
+        const seen = new Set<string>();
+        const result: Product[] = [];
+
+        for (const group of groups || []) {
+          if (!group.products) continue;
+          let count = 0;
+          for (const product of group.products) {
+            const rawId = (product as any).id ?? (product as any).product_id;
+            const img = (product as any).image || (product as any).image_url || (product as any).raw?.image || (product as any).raw?.image_url || '';
+            const name = (product as any).name || '';
+            const price = (product as any).price || '';
+            const key = rawId ? String(rawId) : `${name}|${price}|${img}`;
+            if (!seen.has(key)) {
+              seen.add(key);
+              result.push(product);
+              count++;
+            }
+            if (count === this.productsPerCategory) break; // take only N per category
+          }
+        }
+        return result;
       })
     );
 
@@ -123,13 +159,19 @@ export class Home implements OnInit, OnDestroy {
     if (this.autoTimer) return;
     this.autoTimer = setInterval(() => {
       if (this.autoPaused) return;
-      const el = document.getElementById('prod-list');
-      if (!el) return;
-      if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 10) {
-        el.scrollTo({ left: 0, behavior: 'smooth' });
-      } else {
-        el.scrollBy({ left: 300, behavior: 'smooth' });
-      }
+      const els = Array.from(document.querySelectorAll('.carousel')) as HTMLElement[];
+      if (!els || els.length === 0) return;
+      els.forEach(el => {
+        try {
+          if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 10) {
+            el.scrollTo({ left: 0, behavior: 'smooth' });
+          } else {
+            el.scrollBy({ left: 300, behavior: 'smooth' });
+          }
+        } catch (e) {
+          // ignore
+        }
+      });
     }, 3000);
   }
 

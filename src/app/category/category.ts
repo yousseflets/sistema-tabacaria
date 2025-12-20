@@ -50,6 +50,7 @@ export class Category implements OnInit, OnDestroy {
 
 	private sub?: Subscription;
 	private fallbackTimer?: any;
+	private globalTimer?: any;
 
 	constructor(
 		private route: ActivatedRoute,
@@ -59,6 +60,15 @@ export class Category implements OnInit, OnDestroy {
 
 	ngOnInit(): void {
 		console.debug('[Category] init');
+		// safety global timeout to avoid stuck loading
+		this.clearGlobalTimer();
+		this.globalTimer = setTimeout(() => {
+			if (this.loading) {
+				console.warn('[Category] global timeout fired - clearing loading state');
+				this.loading = false;
+				this.errorMessage = this.errorMessage || 'Tempo de carregamento excedido.';
+			}
+		}, 8000);
 		this.sub = this.route.paramMap.pipe(
 			switchMap((params: ParamMap) => {
 				const categoryParam = params.get('category') || '';
@@ -100,10 +110,13 @@ export class Category implements OnInit, OnDestroy {
 								})
 							);
 
+							// debug: log before merging
+							console.debug('[Category] preparing merge of route$ and clientFallback$');
 							// merge: prefer route$ but if it doesn't emit quickly, clientFallback$ (delayed) will provide results
+							console.debug('[Category] route$ and clientFallback$ created - waiting for first emission');
 							return merge(
 								route$,
-								clientFallback$.pipe(delay(300))
+								clientFallback$.pipe(delay(150))
 							).pipe(take(1));
 						}
 						return this.api.getProducts().pipe(
@@ -116,6 +129,7 @@ export class Category implements OnInit, OnDestroy {
 			next: (items: Product[]) => {
 				console.debug('[Category] items loaded:', items && items.length, items && items.slice ? items.slice(0,5) : items);
 				this.clearFallbackTimer();
+				this.clearGlobalTimer();
 				this.products = (items || []).map(it => ({ ...it, raw: it }));
 				this.currentPage = 1;
 				this.updateVisibleProducts();
@@ -124,6 +138,7 @@ export class Category implements OnInit, OnDestroy {
 			error: (err) => {
 				console.error('[Category] failed to load products', err);
 				this.clearFallbackTimer();
+				this.clearGlobalTimer();
 				this.errorMessage = 'Erro ao carregar produtos: ' + (err && err.message ? err.message : JSON.stringify(err));
 				this.loading = false;
 			}
@@ -131,7 +146,8 @@ export class Category implements OnInit, OnDestroy {
 
 		this.fallbackTimer = setTimeout(() => {
 			if ((this.products || []).length === 0) {
-				console.debug('[Category] fallback timer fired - fetching all products');
+				console.debug('[Category] fallback timer fired - fetching all products (early)');
+				console.debug('[Category] calling api.getProducts() as fallback');
 				this.api.getProducts().subscribe({
 					next: all => {
 						const items = this.filterProductsByParam(all || [], this.name || '');
@@ -152,12 +168,20 @@ export class Category implements OnInit, OnDestroy {
 	ngOnDestroy(): void {
 		this.sub?.unsubscribe();
 		this.clearFallbackTimer();
+		this.clearGlobalTimer();
 	}
 
 	private clearFallbackTimer() {
 		if (this.fallbackTimer) {
 			clearTimeout(this.fallbackTimer);
 			this.fallbackTimer = undefined;
+		}
+	}
+
+	private clearGlobalTimer() {
+		if (this.globalTimer) {
+			clearTimeout(this.globalTimer);
+			this.globalTimer = undefined;
 		}
 	}
 
